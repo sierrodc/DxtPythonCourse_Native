@@ -1,0 +1,18 @@
+[package]
+name = "myrustlib"
+version = "0.1.0"
+authors = ["Roberto.Sarati"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "myrustlib"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ramp = "0.5.3"
+
+[dependencies.pyo3]
+version = "0.8.3"
+features = ["extension-module"]
