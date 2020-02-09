@@ -1,3 +1,7 @@
+// rustup install nightly-2019-12-08
+// rustup default nightly-2019-12-08 
+// cargo build --release
+
 extern crate ramp;
 
 use ramp::Int;
@@ -33,17 +37,17 @@ mod tests {
 }
 
 #[pyclass]
-struct MyType {
+struct NativeFibonacciClass {
     #[pyo3(get, set)] // no need to specify getter/setter
     number: usize
 }
 
 #[pymethods]
-impl MyType {
+impl NativeFibonacciClass {
 
     #[new]
     fn new(obj: &PyRawObject, number: usize) {
-        obj.init({ MyType { number } });
+        obj.init({ NativeFibonacciClass { number } });
     }
 
     fn get_fibonacci(&mut self) -> PyResult<String> {
@@ -51,11 +55,18 @@ impl MyType {
         Ok(res.to_string())
     }
 
-    fn get_my_struct(&mut self) -> Py<MyStruct> {
-        let gil = Python::acquire_gil();
-        let py = gil.python();
-        Py::new(py, MyStruct { number1: 1, number2: 2 }).unwrap()
+    fn get_fibonacci_mt(&mut self, py: Python) -> PyResult<String> {
+        let res = py.allow_threads(move || {
+            fib(self.number)
+        });
+        Ok(res.to_string())
     }
+
+    // fn get_my_struct(&mut self) -> Py<MyStruct> {
+    //     let gil = Python::acquire_gil();
+    //     let py = gil.python();
+    //     Py::new(py, MyStruct { number1: 1, number2: 2 }).unwrap()
+    // }
 
     fn wait(&mut self, seconds: u64) -> PyResult<u64> {
         let waiting_time = time::Duration::from_secs(seconds);
@@ -74,18 +85,18 @@ impl MyType {
     }
 }
 
-#[pyclass]
-struct MyStruct {
-    #[pyo3(get, set)] // no need to specify getter/setter
-    number1: usize,
-
-    #[pyo3(get, set)] // no need to specify getter/setter
-    number2: usize
-}
+// #[pyclass]
+// struct MyStruct {
+//     #[pyo3(get, set)] // no need to specify getter/setter
+//     number1: usize,
+// 
+//     #[pyo3(get, set)] // no need to specify getter/setter
+//     number2: usize
+// }
 
 #[pymodule]
 fn myrustlib(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
-    m.add_class::<MyType>()?;
-    m.add_class::<MyStruct>()?;
+    m.add_class::<NativeFibonacciClass>()?;
+    // m.add_class::<MyStruct>()?;
     Ok(())
 }
